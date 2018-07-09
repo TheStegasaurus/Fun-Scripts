@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reddit 2009</title>
+<script src="d3.v3.min.js" charset="utf-8"></script>
+ 
+<style>
+.bar {
+  fill: steelblue;
+}
+ 
+h1{
+  text-align: center;
+}
+
+body { 
+  display: grid;
+  grid-template-areas: 
+    "header"
+    "nav article ads"
+    "nav footer footer";
+  grid-template-rows: 80px 1fr 70px;  
+  grid-template-columns: 20% 1fr 15%;
+  grid-row-gap: 10px;
+  grid-column-gap: 10px;
+  height: 100vh;
+  margin: 0;
+  }  
+header, footer, article, nav, div {
+  padding: 1.2em;
+  }
+#pageHeader {
+  grid-area: header;
+  }
+#pageFooter {
+  grid-area: footer;
+  }
+#mainArticle { 
+  grid-area: article;      
+  }
+#mainNav { 
+  grid-area: nav; 
+  }
+#siteAds { 
+  grid-area: ads; 
+  } 
+/* Stack the layout on small devices/viewports. */
+
+</style>
+</head>
+<body>
+
+<div id="chart" id="mainArticle"></div>
+
+<script type="text/javascript">
+ 
+var diameter = 1000
+
+var bubble = d3.layout.pack()
+    .sort(null)
+    .size([diameter, diameter])
+    .padding(1.5);
+
+var svg = d3.select("#chart")
+    .append("svg")
+    .attr("width", diameter)
+    .attr("height", diameter)
+    .attr("class", "bubble");
+
+var tooltip = d3.select("#chart")
+    .append("div")
+    .style("position", "absolute")
+    .style("z-index", "10")
+    .style("visibility", "hidden")
+    .style("color", "white")
+    .style("padding", "8px")
+    .style("background-color", "rgba(0, 0, 0, 0.75)")
+    .style("border-radius", "6px")
+    .style("font", "12px sans-serif")
+    .text("tooltip");
+
+d3.csv("data.csv", function(error, data){
+    //convert numerical values from strings to numbers
+    data = data.map(function(d){ d.value = +d["posts"]; return d; });
+
+    //bubbles needs very specific format, convert data to this.
+    var nodes = bubble.nodes({children:data}).filter(function(d) { return !d.children; });
+
+    //setup the chart
+    var bubbles = svg.append("g")
+        .attr("transform", "translate(0,0)")
+        .selectAll(".bubble")
+        .text(function(d){ return d["subreddit"]; })
+        .data(nodes)
+        .enter();
+
+      var min = d3.min(data, function(d) { return d["sentiment"]; });
+      var max = d3.max(data, function(d) { return d["sentiment"]; });
+
+      var color = 
+        d3.scale.linear().domain([min, max])
+        .interpolate(d3.interpolateHcl)
+        .range([d3.rgb("#99000B"),d3.rgb("#F5E6E7")]);
+
+//    var color = d3.scale.linear().domain(Math.min(function(d){ return d["subreddit"]}, )
+
+    //create the bubbles
+    bubbles.append("circle")
+        .attr("r", function(d){ return d.r; })
+        .attr("cx", function(d){ return d.x; })
+        .attr("cy", function(d){ return d.y; })
+        .style("fill", function(d) { return color(d["sentiment"]) })
+        .attr('stroke', 'black')
+        .on("mouseover", function(d) {
+              tooltip.text(d["subreddit"] +":   "+ d["posts"]);
+              tooltip.style("visibility", "visible");
+        })
+        .on("mousemove", function() {
+            return tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");
+        })
+        .on("mouseout", function(){return tooltip.style("visibility", "hidden");});
+
+})   
+</script> 
+</body>
+</html>
