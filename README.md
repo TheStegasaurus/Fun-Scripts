@@ -1,5 +1,5 @@
-# Sentiment-Analysis
-Various projects using sentiment analysis
+# Fun Scripts
+Various scripts that I find fun/useful
 
 ## stock-news
 Gathers a list of links for relevant articles using newsapi.org,
